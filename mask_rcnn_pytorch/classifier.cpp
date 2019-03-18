@@ -45,5 +45,5 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor> ClassifierImpl::forward(
   auto mrcnn_bbox = linear_bbox_->forward(x);
   mrcnn_bbox = mrcnn_bbox.view({mrcnn_bbox.size(0), -1, 4});
 
-  return {mrcnn_class_logits, mrcnn_probs, mrcnn_bbox};
+  return std::make_tuple(mrcnn_class_logits, mrcnn_probs, mrcnn_bbox);
 }

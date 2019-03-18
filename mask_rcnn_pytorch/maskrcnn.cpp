@@ -34,12 +34,14 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Detect(
     at::Tensor images,
     const std::vector<ImageMeta>& image_metas) {
   // Run object detection
-  auto [detections, mrcnn_mask] = PredictInference(images, image_metas);
+  auto ret_tuple1 = PredictInference(images, image_metas);
+  auto detections = std::get<0>(ret_tuple1);
+  auto mrcnn_mask = std::get<1>(ret_tuple1);
   detections = detections.cpu();
   if (!is_empty(mrcnn_mask))
     mrcnn_mask = mrcnn_mask.permute({0, 1, 3, 4, 2}).cpu();
 
-  return {detections, mrcnn_mask};
+  return std::make_tuple(detections, mrcnn_mask);
 }
 
 void MaskRCNNImpl::Train(CocoDataset train_dataset,
@@ -112,15 +114,23 @@ void MaskRCNNImpl::Train(CocoDataset train_dataset,
             workers_num));  // random sampler is default
 
     // Training
-    auto [loss, loss_rpn_class, loss_rpn_bbox, loss_mrcnn_class,
-          loss_mrcnn_bbox, loss_mrcnn_mask] =
-        TrainEpoch(reporter, *train_loader, optim_no_bn, optim_bn,
+    auto ret_tuple1 = TrainEpoch(reporter, *train_loader, optim_no_bn, optim_bn,
                    config_->steps_per_epoch);
+    auto loss = std::get<0>(ret_tuple1);
+    auto loss_rpn_class = std::get<1>(ret_tuple1);
+    auto loss_rpn_bbox = std::get<2>(ret_tuple1);
+    auto loss_mrcnn_class = std::get<3>(ret_tuple1);
+    auto loss_mrcnn_bbox = std::get<4>(ret_tuple1);
+    auto loss_mrcnn_mask = std::get<5>(ret_tuple1);
 
     //  Validation
-    auto [val_loss, val_loss_rpn_class, val_loss_rpn_bbox, val_loss_mrcnn_class,
-          val_loss_mrcnn_bbox, val_loss_mrcnn_mask] =
-        ValidEpoch(reporter, *val_loader, config_->validation_steps);
+    auto ret_tuple2 = ValidEpoch(reporter, *val_loader, config_->validation_steps);
+    auto val_loss = std::get<0>(ret_tuple2);
+    auto val_loss_rpn_class = std::get<1>(ret_tuple2);
+    auto val_loss_rpn_bbox = std::get<2>(ret_tuple2);
+    auto val_loss_mrcnn_class = std::get<3>(ret_tuple2);
+    auto val_loss_mrcnn_bbox = std::get<4>(ret_tuple2);
+    auto val_loss_mrcnn_mask = std::get<5>(ret_tuple2);
 
     // Show statistics
     reporter.ReportEpoch(
@@ -178,16 +188,26 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::ValidEpoch(
     }
 
     // Run object detection
-    auto [rpn_class_logits, rpn_pred_bbox, target_class_ids, mrcnn_class_logits,
-          target_deltas, mrcnn_bbox, target_mask, mrcnn_mask] =
-        PredictTraining(images, gt_class_ids, gt_boxes, gt_masks);
+    auto ret_tuple1 = PredictTraining(images, gt_class_ids, gt_boxes, gt_masks);
+    auto rpn_class_logits = std::get<0>(ret_tuple1);
+    auto rpn_pred_bbox = std::get<1>(ret_tuple1);
+    auto target_class_ids = std::get<2>(ret_tuple1);
+    auto mrcnn_class_logits = std::get<3>(ret_tuple1);
+    auto target_deltas = std::get<4>(ret_tuple1);
+    auto mrcnn_bbox = std::get<5>(ret_tuple1);
+    auto target_mask = std::get<6>(ret_tuple1);
+    auto mrcnn_mask = std::get<7>(ret_tuple1);
 
     // Compute losses
-    auto [rpn_class_loss, rpn_bbox_loss, mrcnn_class_loss, mrcnn_bbox_loss,
-          mrcnn_mask_loss] =
-        ComputeLosses(rpn_match, rpn_bbox, rpn_class_logits, rpn_pred_bbox,
+    auto ret_tuple2 = ComputeLosses(rpn_match, rpn_bbox, rpn_class_logits, rpn_pred_bbox,
                       target_class_ids, mrcnn_class_logits, target_deltas,
                       mrcnn_bbox, target_mask, mrcnn_mask);
+    auto rpn_class_loss = std::get<0>(ret_tuple2);
+    auto rpn_bbox_loss = std::get<1>(ret_tuple2);
+    auto mrcnn_class_loss = std::get<2>(ret_tuple2);
+    auto mrcnn_bbox_loss = std::get<3>(ret_tuple2);
+    auto mrcnn_mask_loss = std::get<4>(ret_tuple2);
+
     auto loss = rpn_class_loss + rpn_bbox_loss + mrcnn_class_loss +
                 mrcnn_bbox_loss + mrcnn_mask_loss;
 
@@ -216,12 +236,12 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::ValidEpoch(
     ++step;
   }
 
-  return {loss_sum,
+  return std::make_tuple(loss_sum,
           loss_rpn_class_sum,
           loss_rpn_bbox_sum,
           loss_mrcnn_class_sum,
           loss_mrcnn_bbox_sum,
-          loss_mrcnn_mask_sum};
+          loss_mrcnn_mask_sum);
 }
 
 std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
@@ -266,16 +286,26 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
     }
 
     // Run object detection
-    auto [rpn_class_logits, rpn_pred_bbox, target_class_ids, mrcnn_class_logits,
-          target_deltas, mrcnn_bbox, target_mask, mrcnn_mask] =
-        PredictTraining(images, gt_class_ids, gt_boxes, gt_masks);
+    auto ret_tuple1 = PredictTraining(images, gt_class_ids, gt_boxes, gt_masks);
+    auto rpn_class_logits = std::get<0>(ret_tuple1);
+    auto rpn_pred_bbox = std::get<1>(ret_tuple1);
+    auto target_class_ids = std::get<2>(ret_tuple1);
+    auto mrcnn_class_logits = std::get<3>(ret_tuple1);
+    auto target_deltas = std::get<4>(ret_tuple1);
+    auto mrcnn_bbox = std::get<5>(ret_tuple1);
+    auto target_mask = std::get<6>(ret_tuple1);
+    auto mrcnn_mask = std::get<7>(ret_tuple1);
 
     // Compute losses
-    auto [rpn_class_loss, rpn_bbox_loss, mrcnn_class_loss, mrcnn_bbox_loss,
-          mrcnn_mask_loss] =
-        ComputeLosses(rpn_match, rpn_bbox, rpn_class_logits, rpn_pred_bbox,
+    auto ret_tuple2 = ComputeLosses(rpn_match, rpn_bbox, rpn_class_logits, rpn_pred_bbox,
                       target_class_ids, mrcnn_class_logits, target_deltas,
                       mrcnn_bbox, target_mask, mrcnn_mask);
+    auto rpn_class_loss = std::get<0>(ret_tuple2);
+    auto rpn_bbox_loss = std::get<1>(ret_tuple2);
+    auto mrcnn_class_loss = std::get<2>(ret_tuple2);
+    auto mrcnn_bbox_loss = std::get<3>(ret_tuple2);
+    auto mrcnn_mask_loss = std::get<4>(ret_tuple2);
+
     auto loss = rpn_class_loss + rpn_bbox_loss + mrcnn_class_loss +
                 mrcnn_bbox_loss + mrcnn_mask_loss;
 
@@ -317,12 +347,12 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
     ++step;
   }
 
-  return {loss_sum,
+  return std::make_tuple(loss_sum,
           loss_rpn_class_sum,
           loss_rpn_bbox_sum,
           loss_mrcnn_class_sum,
           loss_mrcnn_bbox_sum,
-          loss_mrcnn_mask_sum};
+          loss_mrcnn_mask_sum);
 }
 
 std::tuple<torch::Tensor,
@@ -349,14 +379,19 @@ MaskRCNNImpl::ComputeLosses(torch::Tensor rpn_match,
   auto mrcnn_mask_loss =
       ComputeMrcnnMaskLoss(target_mask, target_class_ids, mrcnn_mask);
 
-  return {rpn_class_loss, rpn_bbox_loss, mrcnn_class_loss, mrcnn_bbox_loss,
-          mrcnn_mask_loss};
+  return std::make_tuple(rpn_class_loss, rpn_bbox_loss, mrcnn_class_loss, mrcnn_bbox_loss,
+          mrcnn_mask_loss);
 }
 
 std::tuple<std::vector<at::Tensor>, at::Tensor, at::Tensor, at::Tensor>
 MaskRCNNImpl::PredictRPN(at::Tensor images, int64_t proposal_count) {
   // Feature extraction
-  auto [p2_out, p3_out, p4_out, p5_out, p6_out] = fpn_->forward(images);
+  auto ret_tuple1 = fpn_->forward(images);
+  auto p2_out = std::get<0>(ret_tuple1);
+  auto p3_out = std::get<1>(ret_tuple1);
+  auto p4_out = std::get<2>(ret_tuple1);
+  auto p5_out = std::get<3>(ret_tuple1);
+  auto p6_out = std::get<4>(ret_tuple1);
 
   // Note that P6 is used in RPN, but not in the classifier heads.
   std::vector<at::Tensor> rpn_feature_maps = {p2_out, p3_out, p4_out, p5_out,
@@ -368,7 +403,11 @@ MaskRCNNImpl::PredictRPN(at::Tensor images, int64_t proposal_count) {
   std::vector<at::Tensor> rpn_class;
   std::vector<at::Tensor> rpn_bbox;
   for (auto p : rpn_feature_maps) {
-    auto [class_logits, probs, bbox] = rpn_->forward(p);
+    auto ret_tuple1 = rpn_->forward(p);
+    auto class_logits = std::get<0>(ret_tuple1);
+    auto probs = std::get<1>(ret_tuple1);
+    auto bbox = std::get<2>(ret_tuple1);
+
     rpn_class_logits.push_back(class_logits);
     rpn_class.push_back(probs);
     rpn_bbox.push_back(bbox);
@@ -383,7 +422,7 @@ MaskRCNNImpl::PredictRPN(at::Tensor images, int64_t proposal_count) {
                                 config_->rpn_nms_threshold, anchors_, *config_);
 
   auto class_logits = torch::cat(rpn_class_logits, 1);
-  return {mrcnn_feature_maps, rpn_rois, class_logits, deltas};
+  return std::make_tuple(mrcnn_feature_maps, rpn_rois, class_logits, deltas);
 }
 
 std::tuple<at::Tensor,
@@ -407,8 +446,11 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
   };
   apply(set_bn_eval);
 
-  auto [mrcnn_feature_maps, rpn_rois, rpn_class_logits, rpn_bbox] =
-      PredictRPN(images, config_->post_nms_rois_training);
+  auto ret_tuple1 = PredictRPN(images, config_->post_nms_rois_training);
+  auto mrcnn_feature_maps = std::get<0>(ret_tuple1);
+  auto rpn_rois = std::get<1>(ret_tuple1);
+  auto rpn_class_logits = std::get<2>(ret_tuple1);
+  auto rpn_bbox = std::get<3>(ret_tuple1);
 
   // Debug block
   //  auto d = torch::tensor({512, 512, 512, 512}, at::dtype(at::kFloat));
@@ -430,9 +472,12 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
   // Subsamples proposals and generates target outputs for training
   // Note that proposal class IDs, gt_boxes, and gt_masks are zero
   // padded. Equally, returned rois and targets are zero padded.
-  auto [rois, target_class_ids, target_deltas, target_mask] =
-      DetectionTargetLayer(*config_, rpn_rois, gt_class_ids, gt_boxes,
+  auto ret_tuple2 = DetectionTargetLayer(*config_, rpn_rois, gt_class_ids, gt_boxes,
                            gt_masks);
+  auto rois = std::get<0>(ret_tuple2);
+  auto target_class_ids = std::get<1>(ret_tuple2);
+  auto target_deltas = std::get<2>(ret_tuple2);
+  auto target_mask = std::get<3>(ret_tuple2);
 
   // Debug block
   //  VisualizeBoxes("proposals", 512, 512, rois.squeeze().cpu() * d,
@@ -463,8 +508,8 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
     mrcnn_mask = mask_->forward(mrcnn_feature_maps, rois);
   }
 
-  return {rpn_class_logits, rpn_bbox,   target_class_ids, mrcnn_class_logits,
-          target_deltas,    mrcnn_bbox, target_mask,      mrcnn_mask};
+  return std::make_tuple(rpn_class_logits, rpn_bbox,   target_class_ids, mrcnn_class_logits,
+          target_deltas,    mrcnn_bbox, target_mask,      mrcnn_mask);
 }
 
 std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::PredictInference(
@@ -472,13 +517,18 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::PredictInference(
     const std::vector<ImageMeta>& image_metas) {
   eval();
 
-  auto [mrcnn_feature_maps, rpn_rois, rpn_class_logits, rpn_bbox] =
-      PredictRPN(images, config_->post_nms_rois_inference);
+  auto ret_tuple1 = PredictRPN(images, config_->post_nms_rois_inference);
+  auto mrcnn_feature_maps = std::get<0>(ret_tuple1);
+  auto rpn_rois = std::get<1>(ret_tuple1);
+  auto rpn_class_logits = std::get<2>(ret_tuple1);
+  auto rpn_bbox = std::get<3>(ret_tuple1);
 
   // Network Heads
   // Proposal classifier and BBox regressor heads
-  auto [mrcnn_class_logits, mrcnn_class, mrcnn_bbox] =
-      classifier_->forward(mrcnn_feature_maps, rpn_rois);
+  auto ret_tuple2 = classifier_->forward(mrcnn_feature_maps, rpn_rois);
+  auto mrcnn_class_logits = std::get<0>(ret_tuple2);
+  auto mrcnn_class = std::get<1>(ret_tuple2);
+  auto mrcnn_bbox = std::get<2>(ret_tuple2);
 
   // Detections
   // output is [batch, num_detections, (y1, x1, y2, x2, class_id, score)] in
@@ -509,7 +559,7 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::PredictInference(
     detections = detections.unsqueeze(0);
     mrcnn_mask = mrcnn_mask.unsqueeze(0);
   }
-  return {detections, mrcnn_mask};
+  return std::make_tuple(detections, mrcnn_mask);
 }
 
 // Build Mask R-CNN architecture.
@@ -535,7 +585,12 @@ void MaskRCNNImpl::Build() {
   // Returns a list of the last layers of each stage, 5 in total.
   // Don't create the thead (stage 5), so we pick the 4th item in the list.
   ResNetImpl resnet(ResNetImpl::Architecture::ResNet101, true);
-  auto [C1, C2, C3, C4, C5] = resnet.GetStages();
+  auto ret_tuple1 = resnet.GetStages();
+  auto C1 = std::get<0>(ret_tuple1);
+  auto C2 = std::get<1>(ret_tuple1);
+  auto C3 = std::get<2>(ret_tuple1);
+  auto C4 = std::get<3>(ret_tuple1);
+  auto C5 = std::get<4>(ret_tuple1);
 
   // Top-down Layers
   // TODO: (Legacy)add assert to varify feature map sizes match what's in config

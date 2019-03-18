@@ -74,8 +74,10 @@ int main(int argc, char** argv) {
 
     std::vector<cv::Mat> images{image};
     // Mold inputs to format expected by the neural network
-    auto [molded_images, image_metas, windows] =
-        MoldInputs(images, *config.get());
+    auto ret_tuple1 = MoldInputs(images, *config.get());
+    auto molded_images = std::get<0>(ret_tuple1);
+    auto image_metas = std::get<1>(ret_tuple1);
+    auto windows = std::get<2>(ret_tuple1);
 
     // Root directory of the project
     auto root_dir = fs::current_path();
@@ -96,7 +98,10 @@ int main(int argc, char** argv) {
       model->to(torch::DeviceType::CUDA);
 
     auto start = std::chrono::steady_clock::now();
-    auto [detections, mrcnn_mask] = model->Detect(molded_images, image_metas);
+    auto ret_tuple2 = model->Detect(molded_images, image_metas);
+    auto detections = std::get<0>(ret_tuple2);
+    auto mrcnn_mask = std::get<1>(ret_tuple2);
+
     if (!is_empty(detections)) {
       // Process detections
       //[final_rois, final_class_ids, final_scores, final_masks]

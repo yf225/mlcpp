@@ -1,3 +1,18 @@
+# yf225 NOTE:
+
+## How to compile
+```
+sudo apt install libomp-dev
+# OpenCV 3.4.3 works, but OpenCV 4.0.1 doesn't
+# Only works on 1.0.1!!!
+cmake -DCMAKE_PREFIX_PATH=/data/libtorch/libtorch -L/usr/local/lib ..
+make -j31
+
+wget https://www.dropbox.com/s/rbqyh24ispouajz/mask_rcnn_coco.dat
+```
+
+-------------------------
+
 This is C++ implementation of [Mask R-CNN](https://arxiv.org/abs/1703.06870) with PyTorch C++ frontend.
 The code is based on PyTorch implementations from [multimodallearning](https://github.com/multimodallearning/pytorch-mask-rcnn) and Keras implementation from [Matterport](https://github.com/matterport/Mask_RCNN). Also this implementation use heads from _resnet50_ and can be trained only with
 [coco dataset](https://cocodataset.org/).

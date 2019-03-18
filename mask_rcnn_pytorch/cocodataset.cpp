@@ -106,7 +106,7 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
                                at::dtype(at::kFloat).requires_grad(false));
   rpn_bbox /= std_dev;
 
-  return {rpn_match, rpn_bbox};
+  return std::make_tuple(rpn_match, rpn_bbox);
 }
 }  // namespace
 
@@ -127,9 +127,12 @@ Sample CocoDataset::get(size_t index) {
   auto img_desc = loader_->GetImage(index);
   auto img_width = img_desc.image.cols;
   auto img_height = img_desc.image.rows;
-  auto [image, window, scale, padding] =
-      ResizeImage(img_desc.image, config_->image_min_dim,
+  auto ret_tuple1 = ResizeImage(img_desc.image, config_->image_min_dim,
                   config_->image_max_dim, config_->image_padding);
+  auto image = std::get<0>(ret_tuple1);
+  auto window = std::get<1>(ret_tuple1);
+  auto scale = std::get<2>(ret_tuple1);
+  auto padding = std::get<3>(ret_tuple1);
 
   auto masks = ResizeMasks(img_desc.masks, scale, padding);
 
@@ -197,9 +200,10 @@ Sample CocoDataset::get(size_t index) {
       torch::tensor(img_desc.classes, at::dtype(at::kInt)).clone();
 
   // RPN Targets
-  auto [rpn_match, rpn_bbox] =
-      BuildRpnTargets(anchors_, result.target.gt_boxes, *config_);
-
+  auto ret_tuple2 = BuildRpnTargets(anchors_, result.target.gt_boxes, *config_);
+  auto rpn_match = std::get<0>(ret_tuple2);
+  auto rpn_bbox = std::get<1>(ret_tuple2);
+      
   // If more instances than fits in the array, sub-sample from them.
   if (result.target.gt_boxes.size(0) > config_->max_gt_instances) {
     auto ids = torch::randperm(result.target.gt_boxes.size(0), at::kLong);

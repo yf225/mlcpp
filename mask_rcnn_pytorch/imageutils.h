@@ -15,6 +15,18 @@ struct Window {
   int32_t x1{0};
   int32_t y2{0};
   int32_t x2{0};
+
+  Window() = default;
+
+  Window(int32_t _y1,
+          int32_t _x1,
+          int32_t _y2,
+          int32_t _x2) {
+    y1 = _y1;
+    x1 = _x1;
+    y2 = _y2;
+    x2 = _x2;
+  }
 };
 
 struct Padding {
@@ -24,6 +36,22 @@ struct Padding {
   int32_t right_pad{0};
   int32_t front_pad{0};
   int32_t rear_pad{0};
+
+  Padding() = default;
+
+  Padding(int32_t _top_pad,
+          int32_t _bottom_pad,
+          int32_t _left_pad,
+          int32_t _right_pad,
+          int32_t _front_pad,
+          int32_t _rear_pad) {
+    top_pad = _top_pad;
+    bottom_pad = _bottom_pad;
+    left_pad = _left_pad;
+    right_pad = _right_pad;
+    front_pad = _front_pad;
+    rear_pad = _rear_pad;
+  }
 };
 
 struct ImageMeta {
@@ -32,6 +60,18 @@ struct ImageMeta {
   int32_t image_height{0};
   Window window;
   // std::vector<int32_t> active_class_ids; Unused
+
+  ImageMeta() = default;
+
+  ImageMeta(int32_t _image_id,
+            int32_t _image_width,
+            int32_t _image_height,
+            Window _window) {
+    image_id = _image_id;
+    image_width = _image_width;
+    image_height = _image_height;
+    window = _window;
+  }
 };
 
 /*

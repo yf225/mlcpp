@@ -46,5 +46,5 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor> RPNImpl::forward(at::Tensor x) {
   rpn_bbox = rpn_bbox.contiguous();
   rpn_bbox = rpn_bbox.view({x.size(0), -1, 4});
 
-  return {rpn_class_logits, rpn_probs, rpn_bbox};
+  return std::make_tuple(rpn_class_logits, rpn_probs, rpn_bbox);
 }

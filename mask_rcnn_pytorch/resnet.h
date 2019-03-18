@@ -41,7 +41,7 @@ class ResNetImpl : public torch::nn::Module {
 
   torch::Tensor forward(torch::Tensor input);
 
-  auto GetStages() { return std::make_tuple(c1_, c2_, c3_, c4_, c5_); }
+  std::tuple<torch::nn::Sequential, torch::nn::Sequential, torch::nn::Sequential, torch::nn::Sequential, torch::nn::Sequential> GetStages() { return std::make_tuple(c1_, c2_, c3_, c4_, c5_); }
 
  private:
   torch::nn::Sequential MakeLayer(uint32_t planes,

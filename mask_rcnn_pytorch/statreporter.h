@@ -24,6 +24,22 @@ struct LossStat {
   float loss_mrcnn_class{0};
   float loss_mrcnn_bbox{0};
   float loss_mrcnn_mask{0};
+
+  LossStat() = default;
+
+  LossStat(float _loss,
+          float _loss_rpn_class,
+          float _loss_rpn_bbox,
+          float _loss_mrcnn_class,
+          float _loss_mrcnn_bbox,
+          float _loss_mrcnn_mask) {
+    loss = _loss;
+    loss_rpn_class = _loss_rpn_class; 
+    loss_rpn_bbox = _loss_rpn_bbox;
+    loss_mrcnn_class = _loss_mrcnn_class;
+    loss_mrcnn_bbox = _loss_mrcnn_bbox;
+    loss_mrcnn_mask = _loss_mrcnn_mask;
+  }
 };
 
 class StatReporter {

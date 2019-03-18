@@ -44,7 +44,7 @@ std::tuple<cv::Mat, Window, float, Padding> ResizeImage(cv::Mat image,
   // Default window (y1, x1, y2, x2) and default scale == 1.
   auto h = image.rows;
   auto w = image.cols;
-  Window window{0, 0, h, w};
+  Window window = {0, 0, h, w};
   Padding padding;
   float scale = 1.f;
 
@@ -81,7 +81,7 @@ std::tuple<cv::Mat, Window, float, Padding> ResizeImage(cv::Mat image,
     padding = {top_pad, bottom_pad, left_pad, right_pad, 0, 0};
     window = {top_pad, left_pad, h + top_pad, w + left_pad};
   }
-  return {image, window, scale, padding};
+  return std::make_tuple(image, window, scale, padding);
 }
 
 cv::Mat MoldImage(cv::Mat image, const Config& config) {
@@ -100,14 +100,18 @@ std::tuple<at::Tensor, std::vector<ImageMeta>, std::vector<Window>> MoldInputs(
   std::vector<Window> windows;
   for (const auto& image : images) {
     // Resize image to fit the model expected size
-    auto [molded_image, window, scale, padding] =
-        ResizeImage(image, config.image_min_dim, config.image_max_dim,
+    auto ret_tuple = ResizeImage(image, config.image_min_dim, config.image_max_dim,
                     config.image_padding);
+    auto molded_image = std::get<0>(ret_tuple);
+    auto window = std::get<1>(ret_tuple);
+    auto scale = std::get<2>(ret_tuple);
+    auto padding = std::get<3>(ret_tuple);
+
     molded_image.convertTo(molded_image, CV_32FC3);
     molded_image = MoldImage(molded_image, config);
 
     // Build image_meta
-    ImageMeta image_meta{0, image.rows, image.cols, window};
+    ImageMeta image_meta = {0, image.rows, image.cols, window};
 
     // To tensor
     auto img_t = CvImageToTensor(molded_image);
@@ -123,7 +127,7 @@ std::tuple<at::Tensor, std::vector<ImageMeta>, std::vector<Window>> MoldInputs(
   if (config.gpu_count > 0)
     tensor_images = tensor_images.cuda();
 
-  return {tensor_images, image_metas, windows};
+  return std::make_tuple(tensor_images, image_metas, windows);
 }
 
 /*
@@ -225,7 +229,7 @@ UnmoldDetections(at::Tensor detections,
     full_masks_vec.push_back(full_mask);
   }
 
-  return {boxes, class_ids, scores, full_masks_vec};
+  return std::make_tuple(boxes, class_ids, scores, full_masks_vec);
 }
 
 std::vector<cv::Mat> ResizeMasks(const std::vector<cv::Mat>& masks,

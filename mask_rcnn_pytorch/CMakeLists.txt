@@ -6,7 +6,7 @@ find_package(OpenCV REQUIRED)
 find_package(CUDA REQUIRED)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 
 include_directories(${CMAKE_SOURCE_DIR}/../third_party/json/include)
 include_directories(${TORCH_INCLUDE_DIRS})
@@ -19,7 +19,7 @@ add_compile_options( -fopenmp
                      -Wno-unused-parameter)
 
 
-set(CUDA_NVCC_FLAGS "-std=c++14;")
+set(CUDA_NVCC_FLAGS "-std=c++11;")
 list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wall;")
 list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wextra;")
 list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wno-unused-parameter;")

@@ -48,7 +48,7 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
   // Clip to image boundaries. [batch, N, (y1, x1, y2, x2)]
   auto height = config.image_shape[0];
   auto width = config.image_shape[1];
-  Window window{0, 0, height, width};
+  Window window = {0, 0, height, width};
   boxes = ClipBoxes(boxes, window);
 
   // Filter out small boxes

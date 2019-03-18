@@ -88,5 +88,5 @@ FPNImpl::forward(at::Tensor x) {
   // P5 with stride of 2.
   auto p6_out = p6_->forward(p5_out);
 
-  return {p2_out, p3_out, p4_out, p5_out, p6_out};
+  return std::make_tuple(p2_out, p3_out, p4_out, p5_out, p6_out);
 }

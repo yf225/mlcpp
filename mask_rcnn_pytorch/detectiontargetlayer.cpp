@@ -215,5 +215,5 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
       masks = masks.cuda();
     }
   }
-  return {rois, roi_gt_class_ids, deltas, masks};
+  return std::make_tuple(rois, roi_gt_class_ids, deltas, masks);
 }
