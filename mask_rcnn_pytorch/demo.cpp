@@ -97,38 +97,40 @@ int main(int argc, char** argv) {
     if (config->gpu_count > 0)
       model->to(torch::DeviceType::CUDA);
 
-    auto start = std::chrono::steady_clock::now();
-    auto ret_tuple2 = model->Detect(molded_images, image_metas);
-    auto detections = std::get<0>(ret_tuple2);
-    auto mrcnn_mask = std::get<1>(ret_tuple2);
+    for (int i = 0; i < 100; i++) {
+      auto start = std::chrono::steady_clock::now();
+      auto ret_tuple2 = model->Detect(molded_images, image_metas);
+      auto detections = std::get<0>(ret_tuple2);
+      auto mrcnn_mask = std::get<1>(ret_tuple2);
 
-    if (!is_empty(detections)) {
-      // Process detections
-      //[final_rois, final_class_ids, final_scores, final_masks]
-      using Result =
-          std::tuple<at::Tensor, at::Tensor, at::Tensor, std::vector<cv::Mat>>;
-      std::vector<Result> results;
+      if (!is_empty(detections)) {
+        // Process detections
+        //[final_rois, final_class_ids, final_scores, final_masks]
+        using Result =
+            std::tuple<at::Tensor, at::Tensor, at::Tensor, std::vector<cv::Mat>>;
+        std::vector<Result> results;
 
-      double mask_threshold = 0.5;
-      for (size_t i = 0; i < images.size(); ++i) {
-        auto result =
-            UnmoldDetections(detections[static_cast<int64_t>(i)],
-                             mrcnn_mask[static_cast<int64_t>(i)], image.size(),
-                             windows[i], mask_threshold);
-        results.push_back(result);
+        double mask_threshold = 0.5;
+        for (size_t i = 0; i < images.size(); ++i) {
+          auto result =
+              UnmoldDetections(detections[static_cast<int64_t>(i)],
+                               mrcnn_mask[static_cast<int64_t>(i)], image.size(),
+                               windows[i], mask_threshold);
+          results.push_back(result);
+        }
+        auto stop = std::chrono::steady_clock::now();
+        auto inference_time =
+            std::chrono::duration_cast<std::chrono::milliseconds>(stop - start)
+                .count();
+        std::cout << "Inference time " << inference_time << "\n";
+
+        float score_threshold = 0.7f;
+        visualize(image, std::get<0>(results[0]), std::get<1>(results[0]),
+                  std::get<2>(results[0]), std::get<3>(results[0]),
+                  score_threshold, GetDatasetClasses());
+      } else {
+        std::cerr << "Failed to detect anything!\n";
       }
-      auto stop = std::chrono::steady_clock::now();
-      auto inference_time =
-          std::chrono::duration_cast<std::chrono::milliseconds>(stop - start)
-              .count();
-      std::cout << "Inference time " << inference_time << "\n";
-
-      float score_threshold = 0.7f;
-      visualize(image, std::get<0>(results[0]), std::get<1>(results[0]),
-                std::get<2>(results[0]), std::get<3>(results[0]),
-                score_threshold, GetDatasetClasses());
-    } else {
-      std::cerr << "Failed to detect anything!\n";
     }
 
   } catch (const std::exception& err) {
